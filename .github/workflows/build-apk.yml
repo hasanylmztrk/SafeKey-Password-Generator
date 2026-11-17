@@ -11,16 +11,21 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev libltdl-dev
           pip3 install --user --upgrade buildozer Cython==0.29.33
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Build APK
         run: |
-          export PATH=$PATH:~/.local/bin
-          buildozer android debug
+          buildozer -v android debug || true
+          echo "=== LOG SONU ==="
+          cat .buildozer/android/platform/build-*/build/outputs/logs/* 2>/dev/null || true
+          ls -R bin/ 2>/dev/null || echo "bin yok"
 
       - name: Upload APK
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: safekey-apk
           path: bin/*.apk
+          if-no-files-found: warn
