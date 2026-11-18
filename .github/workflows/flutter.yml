@@ -9,8 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
+      - name: Force Java 17 for Flutter
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+          java -version
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.22.0', channel: 'stable' }
+        with: { flutter-version: '3.24.5', channel: 'stable' }
       - run: rm -rf android ios windows linux macos web
       - run: |
           mkdir -p /tmp/bak
@@ -26,22 +32,23 @@ jobs:
         with: { name: SafeKey-Android-APK, path: build/app/outputs/flutter-apk/app-release.apk }
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.22.0', channel: 'stable' }
+        with: { flutter-version: '3.24.5', channel: 'stable' }
       - run: Remove-Item -Recurse -Force android,ios,windows,linux,macos,web -ErrorAction SilentlyContinue
         shell: powershell
       - run: |
-          New-Item -ItemType Directory -Force -Path $env:TEMP/bak
-          Copy-Item lib/main.dart -Destination $env:TEMP/bak/main.dart
-          Copy-Item pubspec.yaml -Destination $env:TEMP/bak/pubspec.yaml
+          Copy-Item lib/main.dart -Destination main.dart.bak
+          Copy-Item pubspec.yaml -Destination pubspec.yaml.bak
         shell: powershell
       - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
       - run: |
-          Copy-Item $env:TEMP/bak/main.dart -Destination lib/main.dart
-          Copy-Item $env:TEMP/bak/pubspec.yaml -Destination pubspec.yaml
+          Copy-Item main.dart.bak -Destination lib/main.dart
+          Copy-Item pubspec.yaml.bak -Destination pubspec.yaml
         shell: powershell
       - run: flutter config --enable-windows-desktop
       - run: flutter pub get
@@ -53,8 +60,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.22.0', channel: 'stable' }
+        with: { flutter-version: '3.24.5', channel: 'stable' }
       - run: rm -rf android ios windows linux macos web
       - run: |
           mkdir -p /tmp/bak
@@ -64,7 +73,7 @@ jobs:
       - run: |
           cp /tmp/bak/main.dart lib/main.dart
           cp /tmp/bak/pubspec.yaml pubspec.yaml
-      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libsecret-1-0
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
       - run: flutter build linux --release
@@ -75,8 +84,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.22.0', channel: 'stable' }
+        with: { flutter-version: '3.24.5', channel: 'stable' }
       - run: rm -rf android ios windows linux macos web
       - run: |
           mkdir -p /tmp/bak
