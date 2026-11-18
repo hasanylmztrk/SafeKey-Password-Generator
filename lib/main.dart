@@ -158,7 +158,10 @@ class _HomePageState extends State<HomePage> {
       const SnackBar(content: Text('Checking for updates...')));
     try {
       final url = Uri.parse('https://api.github.com/repos/$repoOwner/$repoName/releases/latest');
-      final response = await http.get(url);
+      final response = await http.get(url, headers: {
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'SafeKey-App',
+      });
       if (response.statusCode != 200) throw Exception('Failed');
       final json = jsonDecode(response.body);
       String latest = (json['tag_name'] as String).replaceAll('v', '');
