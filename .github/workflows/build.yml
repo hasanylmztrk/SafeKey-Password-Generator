@@ -3,27 +3,23 @@ on: [push]
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Install dependencies
+      - name: Install Buildozer
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev libltdl-dev libsqlite3-dev
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev
           pip install --upgrade buildozer Cython==0.29.36
       - name: Build APK
-        run: |
-          yes | buildozer -v android debug
-        env:
-          BUILDOZER_ACCEPT_SDK_LICENSE: "True"
+        run: yes | buildozer -v android debug
       - uses: actions/upload-artifact@v5
         with:
           name: SafeKey-Android-APK
           path: bin/*.apk
-          if-no-files-found: error
 
   build-windows:
     runs-on: windows-latest
