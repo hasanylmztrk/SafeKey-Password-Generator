@@ -76,7 +76,11 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libsecret-1-0
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
-      - run: flutter build linux --release
+      - name: Build Linux
+        env:
+          CXXFLAGS: "-Wno-error=deprecated-literal-operator"
+          CFLAGS: "-Wno-error=deprecated-literal-operator"
+        run: flutter build linux --release
       - uses: actions/upload-artifact@v4
         with: { name: SafeKey-Linux, path: build/linux/x64/release/bundle/ }
 
@@ -87,18 +91,4 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: 'temurin', java-version: '17' }
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.24.5', channel: 'stable' }
-      - run: rm -rf android ios windows linux macos web
-      - run: |
-          mkdir -p /tmp/bak
-          cp lib/main.dart /tmp/bak/main.dart
-          cp pubspec.yaml /tmp/bak/pubspec.yaml
-      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
-      - run: |
-          cp /tmp/bak/main.dart lib/main.dart
-          cp /tmp/bak/pubspec.yaml pubspec.yaml
-      - run: flutter config --enable-macos-desktop --enable-ios
-      - run: flutter pub get
-      - run: flutter build macos --release
-      - uses: actions/upload-artifact@v4
-        with: { name: SafeKey-macOS, path: build/macos/Build/Products/Release/ }
+        with: { flutter-version: '3.24.5', channel
