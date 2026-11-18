@@ -33,11 +33,32 @@ class _AnaSayfaState extends State<AnaSayfa> {
   final userCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   Map<String, dynamic> veriler = {};
+  bool sifreGizli = true;
 
   @override
   void initState() {
     super.initState();
     yukle();
+    // OTOMATIK DOLDURMA: Site yazildikca dinle
+    siteCtrl.addListener(() {
+      final site = siteCtrl.text.trim().toLowerCase();
+      if (site.isEmpty) return;
+      final item = veriler[site];
+      if (item != null) {
+        // Eger kullanici zaten elle bir sey yazmadiysa doldur
+        // veya direkt doldur, cunku site eslesti
+        userCtrl.text = item['kullanici'] ?? '';
+        passCtrl.text = item['sifre'] ?? '';
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    siteCtrl.dispose();
+    userCtrl.dispose();
+    passCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> yukle() async {
@@ -65,6 +86,11 @@ class _AnaSayfaState extends State<AnaSayfa> {
       siteCtrl.clear(); userCtrl.clear(); passCtrl.clear();
     });
     await kaydet();
+    // OTOMATIK DOLDURMA: Sisteme "kayit bitti" de, Android/iOS kaydetmeyi teklif etsin
+    TextInput.finishAutofillContext();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$site kaydedildi! ✅')));
   }
 
   void sil(String site) async {
@@ -82,6 +108,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
     final item = veriler[site];
     if (item == null) return;
     setState(() {
+      siteCtrl.text = site;
       userCtrl.text = item['kullanici'] ?? '';
       passCtrl.text = item['sifre'] ?? '';
     });
@@ -104,14 +131,16 @@ class _AnaSayfaState extends State<AnaSayfa> {
             Text('Kayıtlı: ${veriler.length} şifre  •  Android • iOS • Windows • macOS • Linux',
               style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
-            // OTOMATİK DOLDURMA ALANI (Flutter Autofill)
             AutofillGroup(
               child: Column(
                 children: [
                   TextField(
                     controller: siteCtrl,
+                    autofillHints: const [AutofillHints.url],
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Site (örn: instagram)',
+                      hintText: 'Yazınca otomatik dolar...',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.language)),
                   ),
@@ -119,6 +148,8 @@ class _AnaSayfaState extends State<AnaSayfa> {
                   TextField(
                     controller: userCtrl,
                     autofillHints: const [AutofillHints.username, AutofillHints.email],
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Kullanıcı adı / E-posta',
                       border: OutlineInputBorder(),
@@ -128,11 +159,18 @@ class _AnaSayfaState extends State<AnaSayfa> {
                   TextField(
                     controller: passCtrl,
                     autofillHints: const [AutofillHints.password],
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: sifreGizli,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => ekle(),
+                    decoration: InputDecoration(
                       labelText: 'Şifre',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock)),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(sifreGizli ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () => setState(() => sifreGizli = !sifreGizli),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -156,6 +194,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
               final item = veriler[site];
               return Card(
                 child: ListTile(
+                  onTap: () => doldur(site),
                   leading: CircleAvatar(child: Text(site[0].toUpperCase())),
                   title: Text(site.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text('Kullanıcı: ${item['kullanici']}  •  Şifre: ••••••••'),
