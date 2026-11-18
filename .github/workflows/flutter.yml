@@ -78,8 +78,10 @@ jobs:
       - run: flutter pub get
       - name: Fix json.hpp for Linux Clang 18
         run: |
-          find linux -name "json.hpp" -exec sed -i 's/operator"" _json/operator""_json/g; s/operator"" _json_pointer/operator""_json_pointer/g' {} +
-          echo "Patched json.hpp"
+          find ~/.pub-cache -name "json.hpp" -path "*flutter_secure_storage_linux*" -exec sed -i 's/operator"" _json/operator""_json/g; s/operator"" _json_pointer/operator""_json_pointer/g; s/operator "" _json/operator""_json/g; s/operator "" _json_pointer/operator""_json_pointer/g' {} +
+          find linux -name "json.hpp" -exec sed -i 's/operator"" _json/operator""_json/g; s/operator"" _json_pointer/operator""_json_pointer/g; s/operator "" _json/operator""_json/g; s/operator "" _json_pointer/operator""_json_pointer/g' {} + || true
+          echo "add_compile_options(-Wno-error=deprecated-literal-operator)" >> linux/CMakeLists.txt
+          echo "Patched json.hpp + CMakeLists"
       - run: flutter build linux --release
       - uses: actions/upload-artifact@v4
         with: { name: SafeKey-Linux, path: build/linux/x64/release/bundle/ }
