@@ -192,7 +192,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not check for updates. Check internet.')));
+        const SnackBar(content: Text('Internet error $e.')));
     }
   }
 
