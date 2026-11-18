@@ -1,28 +1,11 @@
 name: Build All
-on: [push]
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-android:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.11'
-      - name: Install Buildozer
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev
-          pip install --upgrade buildozer Cython==0.29.36
-      - name: Build APK
-        run: |
-          rm -rf .buildozer
-          buildozer -v android debug
-      - uses: actions/upload-artifact@v5
-        with:
-          name: SafeKey-Android-APK
-          path: bin/*.apk
-
   build-windows:
     runs-on: windows-latest
     steps:
@@ -30,8 +13,13 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - run: pip install kivy pyinstaller
-      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install kivy==2.3.0 pyinstaller
+      - name: Build EXE
+        run: |
+          pyinstaller --onefile --windowed --name SafeKey main.py
       - uses: actions/upload-artifact@v5
         with:
           name: SafeKey-Windows-EXE
@@ -44,26 +32,58 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - run: pip install kivy pyinstaller
-      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install kivy==2.3.0 pyinstaller
+      - name: Build APP
+        run: |
+          pyinstaller --onefile --windowed --name SafeKey main.py
       - uses: actions/upload-artifact@v5
         with:
           name: SafeKey-macOS-App
           path: dist/SafeKey.app
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libgstreamer1.0-dev
-          pip install kivy pyinstaller
-      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - name: Install system deps
+        run: |
+          sudo apt update
+          sudo apt install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install kivy==2.3.0 pyinstaller
+      - name: Build Binary
+        run: |
+          pyinstaller --onefile --name SafeKey main.py
       - uses: actions/upload-artifact@v5
         with:
-          name: SafeKey-Linux
+          name: SafeKey-Linux-Binary
           path: dist/SafeKey
+
+  build-android:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - name: Install Buildozer
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev libtinfo5
+          pip install --upgrade buildozer==1.5.0 Cython==0.29.33
+      - name: Build APK
+        run: |
+          rm -rf .buildozer
+          buildozer -v android debug
+      - uses: actions/upload-artifact@v5
+        with:
+          name: SafeKey-Android-APK
+          path: bin/*.apk
