@@ -30,16 +30,17 @@ jobs:
 
   build-windows:
     name: 2 - Windows
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.5'
+          flutter-version: '3.32.8'
           channel: 'stable'
           cache: true
       - run: flutter create . --org com.safekey.app --project-name safekey
       - run: flutter pub get
+      - run: flutter config --enable-windows-desktop
       - run: flutter build windows --release
       - uses: actions/upload-artifact@v4
         with:
@@ -48,7 +49,7 @@ jobs:
 
   build-linux:
     name: 3 - Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -61,7 +62,8 @@ jobs:
       - name: Install Linux deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev libglu1-mesa libsecret-1-dev libjsoncpp-dev
+      - run: flutter config --enable-linux-desktop
       - run: flutter build linux --release
       - uses: actions/upload-artifact@v4
         with:
