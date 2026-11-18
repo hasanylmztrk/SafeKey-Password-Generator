@@ -4,19 +4,19 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 import random, string
 
-class SafekeyApp(App):
+class SafeKeyApp(App):
     def build(self):
-        self.layout = BoxLayout(orientation='vertical', padding=20, spacing=20)
-        self.label = Label(text='Şifren burada çıkacak', font_size=22)
-        btn = Button(text='ŞİFRE ÜRET', font_size=28, size_hint=(1, 0.4))
+        self.layout = BoxLayout(orientation='vertical', padding=30, spacing=20)
+        self.lbl = Label(text='SafeKey\nŞifren burada çıkacak', font_size=24)
+        btn = Button(text='ŞİFRE ÜRET', font_size=22, size_hint_y=None, height=70)
         btn.bind(on_press=self.uret)
-        self.layout.add_widget(self.label)
+        self.layout.add_widget(self.lbl)
         self.layout.add_widget(btn)
         return self.layout
 
     def uret(self, x):
         harfler = string.ascii_letters + string.digits + "!@#$"
-        sifre = ''.join(random.choice(harfler) for i in range(16))
-        self.label.text = sifre
+        sifre = ''.join(random.choice(harfler) for _ in range(16))
+        self.lbl.text = sifre
 
-SafekeyApp().run()
+SafeKeyApp().run()
