@@ -22,6 +22,7 @@ jobs:
           cache: true
       - run: flutter create . --org com.safekey.app --project-name safekey
       - run: flutter pub get
+      - run: flutter create .
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
