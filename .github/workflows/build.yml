@@ -1,20 +1,136 @@
-name: Build EXE
+name: Build SafeKey EVERYTHING
 
-on:
-  push:
-    branches: [ main ]
+on: [push]
 
 jobs:
-  build:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer android debug
+          workdir: .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-android
+          path: bin/*.apk
+
+  build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - run: pip install pyinstaller
-      - run: pyinstaller --onefile --name Safekey main.py
+          python-version: '3.10'
+      - run: pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Safekey-exe
-          path: dist/Safekey.exe
+          name: safekey-windows
+          path: dist/*.exe
+
+  build-linux-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-linux-ubuntu-debian-mint
+          path: dist/SafeKey
+
+  build-linux-fedora:
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: dnf install -y python3 python3-pip
+      - run: pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-linux-fedora
+          path: dist/SafeKey
+
+  build-linux-arch:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pacman -Sy --noconfirm python python-pip
+      - run: pip install kivy pyinstaller --break-system-packages
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-linux-arch
+          path: dist/SafeKey
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-macos
+          path: dist/*.app
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer ios debug
+          workdir: .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-ios
+          path: bin/*.ipa
+
+  build-raspberrypi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey-RaspberryPi main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-raspberrypi
+          path: dist/*
+
+  build-freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: vmactions/freebsd-vm@v1
+        with:
+          run: |
+            pkg install -y python310 py310-pip
+            pip install kivy pyinstaller
+            pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-freebsd
+          path: dist/SafeKey
+
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: safekey-web
+          path: index.html
