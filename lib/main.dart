@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -16,39 +17,45 @@ class SafeKeyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const AnaSayfa(),
+      home: const HomePage(),
     );
   }
 }
 
-class AnaSayfa extends StatefulWidget {
-  const AnaSayfa({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
   @override
-  State<AnaSayfa> createState() => _AnaSayfaState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _AnaSayfaState extends State<AnaSayfa> {
+class _HomePageState extends State<HomePage> {
   final storage = const FlutterSecureStorage();
   final siteCtrl = TextEditingController();
   final userCtrl = TextEditingController();
   final passCtrl = TextEditingController();
-  Map<String, dynamic> veriler = {};
-  bool sifreGizli = true;
+  Map<String, dynamic> data = {};
+  bool isPasswordHidden = true;
+
+  // PASSWORD GENERATOR SETTINGS
+  double genLength = 16;
+  bool genUpper = true;
+  bool genLower = true;
+  bool genNumbers = true;
+  bool genSymbols = true;
+  String generatedPassword = "";
+  bool isGeneratorOpen = false;
 
   @override
   void initState() {
     super.initState();
-    yukle();
-    // OTOMATIK DOLDURMA: Site yazildikca dinle
+    load();
     siteCtrl.addListener(() {
       final site = siteCtrl.text.trim().toLowerCase();
       if (site.isEmpty) return;
-      final item = veriler[site];
+      final item = data[site];
       if (item != null) {
-        // Eger kullanici zaten elle bir sey yazmadiysa doldur
-        // veya direkt doldur, cunku site eslesti
-        userCtrl.text = item['kullanici'] ?? '';
-        passCtrl.text = item['sifre'] ?? '';
+        userCtrl.text = item['username'] ?? '';
+        passCtrl.text = item['password'] ?? '';
       }
     });
   }
@@ -61,59 +68,79 @@ class _AnaSayfaState extends State<AnaSayfa> {
     super.dispose();
   }
 
-  Future<void> yukle() async {
+  Future<void> load() async {
     final jsonStr = await storage.read(key: 'safekey_data');
     if (jsonStr != null) {
-      setState(() => veriler = jsonDecode(jsonStr));
+      setState(() => data = jsonDecode(jsonStr));
     }
   }
 
-  Future<void> kaydet() async {
-    await storage.write(key: 'safekey_data', value: jsonEncode(veriler));
+  Future<void> save() async {
+    await storage.write(key: 'safekey_data', value: jsonEncode(data));
   }
 
-  void ekle() async {
+  void add() async {
     final site = siteCtrl.text.trim().toLowerCase();
     final user = userCtrl.text.trim();
     final pass = passCtrl.text.trim();
     if (site.isEmpty || pass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Site ve şifre boş olamaz!')));
+        const SnackBar(content: Text('Site and password cannot be empty!')));
       return;
     }
     setState(() {
-      veriler[site] = {'kullanici': user, 'sifre': pass};
+      data[site] = {'username': user, 'password': pass};
       siteCtrl.clear(); userCtrl.clear(); passCtrl.clear();
     });
-    await kaydet();
-    // OTOMATIK DOLDURMA: Sisteme "kayit bitti" de, Android/iOS kaydetmeyi teklif etsin
+    await save();
     TextInput.finishAutofillContext();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$site kaydedildi! ✅')));
+      SnackBar(content: Text('$site saved! ✅')));
   }
 
-  void sil(String site) async {
-    setState(() => veriler.remove(site));
-    await kaydet();
+  void delete(String site) async {
+    setState(() => data.remove(site));
+    await save();
   }
 
-  void kopyala(String text) {
+  void copy(String text) {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Kopyalandı!')));
+      const SnackBar(content: Text('Copied!')));
   }
 
-  void doldur(String site) {
-    final item = veriler[site];
+  void fill(String site) {
+    final item = data[site];
     if (item == null) return;
     setState(() {
       siteCtrl.text = site;
-      userCtrl.text = item['kullanici'] ?? '';
-      passCtrl.text = item['sifre'] ?? '';
+      userCtrl.text = item['username'] ?? '';
+      passCtrl.text = item['password'] ?? '';
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$site dolduruldu!')));
+      SnackBar(content: Text('$site filled!')));
+  }
+
+  // PASSWORD GENERATE FUNCTION
+  void generatePassword() {
+    String chars = "";
+    if (genUpper) chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (genLower) chars += "abcdefghijklmnopqrstuvwxyz";
+    if (genNumbers) chars += "0123456789";
+    if (genSymbols) chars += "!@#\$%^&*()-_=+";
+    if (chars.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select at least one option!')));
+      return;
+    }
+    final rand = Random.secure();
+    final newPass = List.generate(genLength.toInt(), (_) => chars[rand.nextInt(chars.length)]).join();
+    setState(() {
+      generatedPassword = newPass;
+      passCtrl.text = newPass;
+      isPasswordHidden = false;
+    });
   }
 
   @override
@@ -128,7 +155,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Kayıtlı: ${veriler.length} şifre  •  Android • iOS • Windows • macOS • Linux',
+            Text('Saved: ${data.length} passwords  •  Android • iOS • Windows • macOS • Linux',
               style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
             AutofillGroup(
@@ -139,8 +166,8 @@ class _AnaSayfaState extends State<AnaSayfa> {
                     autofillHints: const [AutofillHints.url],
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
-                      labelText: 'Site (örn: instagram)',
-                      hintText: 'Yazınca otomatik dolar...',
+                      labelText: 'Site (e.g. instagram)',
+                      hintText: 'Type to autofill...',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.language)),
                   ),
@@ -151,7 +178,7 @@ class _AnaSayfaState extends State<AnaSayfa> {
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
-                      labelText: 'Kullanıcı adı / E-posta',
+                      labelText: 'Username / Email',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.person)),
                   ),
@@ -159,51 +186,109 @@ class _AnaSayfaState extends State<AnaSayfa> {
                   TextField(
                     controller: passCtrl,
                     autofillHints: const [AutofillHints.password],
-                    obscureText: sifreGizli,
+                    obscureText: isPasswordHidden,
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => ekle(),
+                    onSubmitted: (_) => add(),
                     decoration: InputDecoration(
-                      labelText: 'Şifre',
+                      labelText: 'Password',
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(sifreGizli ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () => setState(() => sifreGizli = !sifreGizli),
+                      suffixIcon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.casino, color: Colors.deepPurple),
+                            tooltip: 'Generate Password',
+                            onPressed: () => setState(() => isGeneratorOpen = !isGeneratorOpen),
+                          ),
+                          IconButton(
+                            icon: Icon(isPasswordHidden ? Icons.visibility : Icons.visibility_off),
+                            onPressed: () => setState(() => isPasswordHidden = !isPasswordHidden),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+            // PASSWORD GENERATOR PANEL
+            if (isGeneratorOpen)
+              Card(
+                color: Colors.deepPurple.shade50,
+                margin: const EdgeInsets.only(top: 12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.auto_fix_high, color: Colors.deepPurple),
+                          const SizedBox(width: 8),
+                          const Text('Password Generator', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                          const Spacer(),
+                          IconButton(icon: const Icon(Icons.close), onPressed: () => setState(() => isGeneratorOpen = false)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.deepPurple.shade100)),
+                        child: Row(
+                          children: [
+                            Expanded(child: SelectableText(generatedPassword.isEmpty ? "Press Generate..." : generatedPassword, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
+                            IconButton(icon: const Icon(Icons.copy), onPressed: () => copy(generatedPassword)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Length: ${genLength.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Slider(value: genLength, min: 6, max: 32, divisions: 26, label: genLength.toInt().toString(), onChanged: (v) => setState(() => genLength = v)),
+                      SwitchListTile(title: const Text('Uppercase (ABC)'), value: genUpper, onChanged: (v) => setState(() => genUpper = v)),
+                      SwitchListTile(title: const Text('Lowercase (abc)'), value: genLower, onChanged: (v) => setState(() => genLower = v)),
+                      SwitchListTile(title: const Text('Numbers (123)'), value: genNumbers, onChanged: (v) => setState(() => genNumbers = v)),
+                      SwitchListTile(title: const Text('Symbols (!@#)'), value: genSymbols, onChanged: (v) => setState(() => genSymbols = v)),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(onPressed: generatePassword, icon: const Icon(Icons.refresh), label: const Text('GENERATE PASSWORD')),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text('Generated password is automatically written to the Password field above. Just press SAVE.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: ekle,
+              onPressed: add,
               icon: const Icon(Icons.save),
-              label: const Text('KAYDET'),
+              label: const Text('SAVE'),
             ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => TextInput.finishAutofillContext(),
               icon: const Icon(Icons.auto_fix_high),
-              label: const Text('OTOMATİK DOLDURMAYI BİTİR / KAYDET'),
+              label: const Text('FINISH AUTOFILL / SAVE'),
             ),
             const Divider(height: 32),
-            const Text('Kayıtlı Şifreler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Saved Passwords', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            ...veriler.keys.map((site) {
-              final item = veriler[site];
+            ...data.keys.map((site) {
+              final item = data[site];
               return Card(
                 child: ListTile(
-                  onTap: () => doldur(site),
+                  onTap: () => fill(site),
                   leading: CircleAvatar(child: Text(site[0].toUpperCase())),
                   title: Text(site.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('Kullanıcı: ${item['kullanici']}  •  Şifre: ••••••••'),
+                  subtitle: Text('User: ${item['username']}  •  Password: ••••••••'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(icon: const Icon(Icons.auto_fix_high), onPressed: () => doldur(site)),
-                      IconButton(icon: const Icon(Icons.copy), onPressed: () => kopyala(item['sifre'])),
-                      IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => sil(site)),
+                      IconButton(icon: const Icon(Icons.auto_fix_high), onPressed: () => fill(site)),
+                      IconButton(icon: const Icon(Icons.copy), onPressed: () => copy(item['password'])),
+                      IconButton(icon: const Icon(Icons.delete, color: Colors.red), onPressed: () => delete(site)),
                     ],
                   ),
                 ),
