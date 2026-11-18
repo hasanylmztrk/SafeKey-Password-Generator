@@ -76,7 +76,11 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libsecret-1-0
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
-      - run: CXXFLAGS="-Wno-error=deprecated-literal-operator" flutter build linux --release
+      - name: Fix json.hpp for Linux Clang 18
+        run: |
+          find linux -name "json.hpp" -exec sed -i 's/operator"" _json/operator""_json/g; s/operator"" _json_pointer/operator""_json_pointer/g' {} +
+          echo "Patched json.hpp"
+      - run: flutter build linux --release
       - uses: actions/upload-artifact@v4
         with: { name: SafeKey-Linux, path: build/linux/x64/release/bundle/ }
 
