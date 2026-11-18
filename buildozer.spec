@@ -4,6 +4,7 @@ package.name = safekey
 package.domain = org.safekey
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
+source.exclude_exts = spec
 version = 0.1
 requirements = python3,kivy==2.3.0
 orientation = portrait
