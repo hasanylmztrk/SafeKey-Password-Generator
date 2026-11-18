@@ -20,7 +20,6 @@ No account needed. No ads. Your data stays on YOUR device.
     - Share to Google Drive, WhatsApp, Email
     - Restore on new phone in 1 click
 - 🔄 **Check for Updates** - Check new version inside the app
-- 📱 **Autofill Support** - Works with Android / iOS Autofill
 - 🌍 **All Platforms** - Android, iOS, Windows, macOS, Linux
 
 ---
