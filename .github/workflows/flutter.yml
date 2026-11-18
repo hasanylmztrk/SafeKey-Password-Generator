@@ -1,158 +1,108 @@
-name: Flutter Build - All Platforms
+name: Flutter Build
+
 on:
   push:
+    branches: [ main ]
+  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build-android:
+    name: Build Android APK
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
-        with: { distribution: 'temurin', java-version: '17' }
-      - name: Force Java 17 for Flutter
-        run: |
-          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
-          java -version
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.24.5', channel: 'stable' }
-      - run: rm -rf android ios windows linux macos web
-      - run: |
-          mkdir -p /tmp/bak
-          cp lib/main.dart /tmp/bak/main.dart
-          cp pubspec.yaml /tmp/bak/pubspec.yaml
-      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
-      - run: |
-          cp /tmp/bak/main.dart lib/main.dart
-          cp /tmp/bak/pubspec.yaml pubspec.yaml
-      - name: Android Otomatik Doldurma Ekle
-        run: |
-          python3 << 'PY'
-          import pathlib
-          p = pathlib.Path("android/app/src/main/AndroidManifest.xml")
-          t = p.read_text()
-          if "MyAutofillService" not in t:
-              t = t.replace("</application>", '''
-                  <service
-                      android:name=".MyAutofillService"
-                      android:label="SafeKey"
-                      android:permission="android.permission.BIND_AUTOFILL_SERVICE">
-                      <intent-filter>
-                          <action android:name="android.service.autofill.AutofillService" />
-                      </intent-filter>
-                      <meta-data
-                          android:name="android.autofill"
-                          android:resource="@xml/autofill_service" />
-                  </service>
-              </application>''')
-              p.write_text(t)
-          print("Manifest tamam")
-          PY
-          mkdir -p android/app/src/main/res/xml
-          cat > android/app/src/main/res/xml/autofill_service.xml << 'XML'
-          <?xml version="1.0" encoding="utf-8"?>
-          <autofill-service xmlns:android="http://schemas.android.com/apk/res/android"
-              android:settingsActivity=".MainActivity" />
-          XML
-          mkdir -p android/app/src/main/kotlin/com/safekey/app
-          cat > android/app/src/main/kotlin/com/safekey/app/MyAutofillService.kt << 'KT'
-          package com.safekey.app
-          import android.service.autofill.AutofillService
-          import android.service.autofill.FillCallback
-          import android.service.autofill.FillRequest
-          import android.service.autofill.SaveCallback
-          import android.service.autofill.SaveRequest
-          import android.os.CancellationSignal
-          class MyAutofillService : AutofillService() {
-              override fun onFillRequest(request: FillRequest, cancellationSignal: CancellationSignal, callback: FillCallback) {
-                  callback.onSuccess(null)
-              }
-              override fun onSaveRequest(request: SaveRequest, callback: SaveCallback) {
-                  callback.onSuccess()
-              }
-          }
-          KT
-          echo "Android Autofill hazir"
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      # android klasörü yoksa temiz oluştur - ESKİ HALİ
+      - run: flutter create . --org com.safekey.app --project-name safekey
+
       - run: flutter pub get
+
       - run: flutter build apk --release
+
       - uses: actions/upload-artifact@v4
-        with: { name: SafeKey-Android-APK, path: build/app/outputs/flutter-apk/app-release.apk }
+        with:
+          name: SafeKey-Android-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
 
   build-windows:
-    runs-on: windows-2022
+    name: Build Windows
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: 'temurin', java-version: '17' }
+
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.24.5', channel: 'stable' }
-      - run: Remove-Item -Recurse -Force android,ios,windows,linux,macos,web -ErrorAction SilentlyContinue
-        shell: powershell
-      - run: |
-          Copy-Item lib/main.dart -Destination main.dart.bak
-          Copy-Item pubspec.yaml -Destination pubspec.yaml.bak
-        shell: powershell
-      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
-      - run: |
-          Copy-Item main.dart.bak -Destination lib/main.dart
-          Copy-Item pubspec.yaml.bak -Destination pubspec.yaml
-        shell: powershell
-      - run: flutter config --enable-windows-desktop
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - run: flutter create . --org com.safekey.app --project-name safekey
+
       - run: flutter pub get
+
       - run: flutter build windows --release
+
       - uses: actions/upload-artifact@v4
-        with: { name: SafeKey-Windows, path: build/windows/x64/runner/Release/ }
+        with:
+          name: SafeKey-Windows
+          path: build/windows/x64/runner/Release/
 
   build-linux:
+    name: Build Linux
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: 'temurin', java-version: '17' }
+
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.24.5', channel: 'stable' }
-      - run: rm -rf android ios windows linux macos web
-      - run: |
-          mkdir -p /tmp/bak
-          cp lib/main.dart /tmp/bak/main.dart
-          cp pubspec.yaml /tmp/bak/pubspec.yaml
-      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
-      - run: |
-          cp /tmp/bak/main.dart lib/main.dart
-          cp /tmp/bak/pubspec.yaml pubspec.yaml
-      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libsecret-1-0
-      - run: flutter config --enable-linux-desktop
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - run: flutter create . --org com.safekey.app --project-name safekey
+
       - run: flutter pub get
-      - name: Fix json.hpp for Linux Clang 18
-        run: |
-          find ~/.pub-cache -name "json.hpp" -path "*flutter_secure_storage_linux*" -exec sed -i 's/operator"" _json/operator""_json/g; s/operator"" _json_pointer/operator""_json_pointer/g; s/operator "" _json/operator""_json/g; s/operator "" _json_pointer/operator""_json_pointer/g' {} +
-          find linux -name "json.hpp" -exec sed -i 's/operator"" _json/operator""_json_pointer/g; s/operator "" _json/operator""_json/g; s/operator "" _json_pointer/operator""_json_pointer/g' {} + || true
-          echo "add_compile_options(-Wno-error=deprecated-literal-operator)" >> linux/CMakeLists.txt
-          echo "Patched json.hpp + CMakeLists"
+
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
       - run: flutter build linux --release
+
       - uses: actions/upload-artifact@v4
-        with: { name: SafeKey-Linux, path: build/linux/x64/release/bundle/ }
+        with:
+          name: SafeKey-Linux
+          path: build/linux/x64/release/bundle/
 
   build-macos:
+    name: Build macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with: { distribution: 'temurin', java-version: '17' }
+
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.24.5', channel: 'stable' }
-      - run: rm -rf android ios windows linux macos web
-      - run: |
-          mkdir -p /tmp/bak
-          cp lib/main.dart /tmp/bak/main.dart
-          cp pubspec.yaml /tmp/bak/pubspec.yaml
-      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
-      - run: |
-          cp /tmp/bak/main.dart lib/main.dart
-          cp /tmp/bak/pubspec.yaml pubspec.yaml
-      - run: flutter config --enable-macos-desktop --enable-ios
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - run: flutter create . --org com.safekey.app --project-name safekey
+
       - run: flutter pub get
+
       - run: flutter build macos --release
+
       - uses: actions/upload-artifact@v4
-        with: { name: SafeKey-macOS, path: build/macos/Build/Products/Release/ }
+        with:
+          name: SafeKey-macOS
+          path: build/macos/Build/Products/Release/
