@@ -264,7 +264,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Saved: ${data.length} passwords  •  v$currentVersion  •  Android • iOS • Windows • macOS • Linux',
+            Text('Saved: ${data.length} passwords  •  v$currentVersion  •  Android • Windows • macOS • Linux',
               style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
             Column(
