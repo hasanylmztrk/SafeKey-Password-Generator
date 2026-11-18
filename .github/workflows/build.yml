@@ -1,36 +1,62 @@
-name: Build SafeKey
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+name: Build All
+on: [push]
 
 jobs:
   build-android:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-          pip3 install --upgrade pip
-          pip3 install --upgrade buildozer cython==0.29.33
-
+      - uses: actions/checkout@v5
       - name: Build APK
-        run: |
-          buildozer android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: ArtemSBulgakov/buildozer-action@v1
         with:
-          name: safekey-android
+          command: buildozer android debug
+          buildozer_version: stable
+      - uses: actions/upload-artifact@v5
+        with:
+          name: SafeKey-Android-APK
           path: bin/*.apk
-          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v5
+        with:
+          name: SafeKey-Windows-EXE
+          path: dist/SafeKey.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v5
+        with:
+          name: SafeKey-macOS-App
+          path: dist/SafeKey.app
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libgstreamer1.0-dev
+          pip install kivy pyinstaller
+      - run: pyinstaller --onefile --windowed --name SafeKey main.py
+      - uses: actions/upload-artifact@v5
+        with:
+          name: SafeKey-Linux
+          path: dist/SafeKey
