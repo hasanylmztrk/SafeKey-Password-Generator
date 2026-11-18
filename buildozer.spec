@@ -6,7 +6,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,atlas
 source.exclude_exts = spec
 version = 0.1
-requirements = python3,kivy==2.3.0
+requirements = python3,kivy @ https://github.com/kivy/kivy/archive/master.zip
 orientation = portrait
 fullscreen = 0
 android.permissions = INTERNET
