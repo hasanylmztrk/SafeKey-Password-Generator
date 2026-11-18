@@ -104,7 +104,6 @@ class _HomePageState extends State<HomePage> {
       siteCtrl.clear(); userCtrl.clear(); passCtrl.clear();
     });
     await save();
-    TextInput.finishAutofillContext();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$site saved! ✅')));
@@ -265,59 +264,60 @@ class _HomePageState extends State<HomePage> {
             Text('Saved: ${data.length} passwords  •  v$currentVersion  •  Android • iOS • Windows • macOS • Linux',
               style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 16),
-            AutofillGroup(
-              child: Column(
-                children: [
-                  TextField(
-                    controller: siteCtrl,
-                    autofillHints: const [AutofillHints.url],
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Site (e.g. instagram)',
-                      hintText: 'Type to autofill...',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.language)),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: userCtrl,
-                    autofillHints: const [AutofillHints.username, AutofillHints.email],
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Username / Email',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person)),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: passCtrl,
-                    autofillHints: const [AutofillHints.password],
-                    obscureText: isPasswordHidden,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => add(),
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.casino, color: Colors.deepPurple),
-                            tooltip: 'Generate Password',
-                            onPressed: () => setState(() => isGeneratorOpen = !isGeneratorOpen),
-                          ),
-                          IconButton(
-                            icon: Icon(isPasswordHidden ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => isPasswordHidden = !isPasswordHidden),
-                          ),
-                        ],
-                      ),
+            Column(
+              children: [
+                TextField(
+                  controller: siteCtrl,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Site (e.g. instagram)',
+                    hintText: 'Type to autofill...',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.language)),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: userCtrl,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Username / Email',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person)),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passCtrl,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  obscureText: isPasswordHidden,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => add(),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.casino, color: Colors.deepPurple),
+                          tooltip: 'Generate Password',
+                          onPressed: () => setState(() => isGeneratorOpen = !isGeneratorOpen),
+                        ),
+                        IconButton(
+                          icon: Icon(isPasswordHidden ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => isPasswordHidden = !isPasswordHidden),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             if (isGeneratorOpen)
               Card(
@@ -368,8 +368,6 @@ class _HomePageState extends State<HomePage> {
               ),
             const SizedBox(height: 12),
             FilledButton.icon(onPressed: add, icon: const Icon(Icons.save), label: const Text('SAVE')),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(onPressed: () => TextInput.finishAutofillContext(), icon: const Icon(Icons.auto_fix_high), label: const Text('FINISH AUTOFILL / SAVE')),
             const SizedBox(height: 8),
             Row(
               children: [
