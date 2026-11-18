@@ -1,72 +1,19 @@
-name: Build SafeKey App
+name: Build SafeKey
 
 on: [push]
 
 jobs:
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: ArtemSBulgakov/buildozer-action@v1
+      - name: Build APK
+        uses: ArtemSBulgakov/buildozer-action@v1
         with:
           command: buildozer android debug
           workdir: .
-      - uses: actions/upload-artifact@v4
+      - name: APK Kaydet
+        uses: actions/upload-artifact@v4
         with:
           name: safekey-android
           path: bin/*.apk
-
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - run: pip install kivy pyinstaller
-      - run: pyinstaller --onefile --windowed --name SafeKey main.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: safekey-windows
-          path: dist/*.exe
-
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - run: pip install kivy pyinstaller
-      - run: pyinstaller --onefile --windowed --name SafeKey main.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: safekey-linux
-          path: dist/SafeKey
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - run: pip install kivy pyinstaller
-      - run: pyinstaller --onefile --windowed --name SafeKey main.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: safekey-macos
-          path: dist/*.app
-
-  build-ios:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ArtemSBulgakov/buildozer-action@v1
-        with:
-          command: buildozer ios debug
-          workdir: .
-      - uses: actions/upload-artifact@v4
-        with:
-          name: safekey-ios
-          path: bin/*.ipa
