@@ -11,14 +11,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with: { flutter-version: '3.22.0', channel: 'stable' }
-      - name: Ana kodu yedekle
-        run: cp lib/main.dart /tmp/main.dart.bak
-      - name: Eksik Flutter klasörlerini oluştur
-        run: flutter create . --org com.safekey.app --project-name safekey
-      - name: Ana kodu geri yükle
-        run: cp /tmp/main.dart.bak lib/main.dart
+      - run: rm -rf android ios windows linux macos web
+      - run: |
+          mkdir -p /tmp/bak
+          cp lib/main.dart /tmp/bak/main.dart
+          cp pubspec.yaml /tmp/bak/pubspec.yaml
+      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
+      - run: |
+          cp /tmp/bak/main.dart lib/main.dart
+          cp /tmp/bak/pubspec.yaml pubspec.yaml
       - run: flutter pub get
-      - run: flutter analyze || true
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with: { name: SafeKey-Android-APK, path: build/app/outputs/flutter-apk/app-release.apk }
@@ -29,10 +31,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with: { flutter-version: '3.22.0', channel: 'stable' }
-      - run: Copy-Item lib/main.dart -Destination $env:TEMP/main.dart.bak
+      - run: Remove-Item -Recurse -Force android,ios,windows,linux,macos,web -ErrorAction SilentlyContinue
         shell: powershell
-      - run: flutter create . --org com.safekey.app --project-name safekey
-      - run: Copy-Item $env:TEMP/main.dart.bak -Destination lib/main.dart
+      - run: |
+          New-Item -ItemType Directory -Force -Path $env:TEMP/bak
+          Copy-Item lib/main.dart -Destination $env:TEMP/bak/main.dart
+          Copy-Item pubspec.yaml -Destination $env:TEMP/bak/pubspec.yaml
+        shell: powershell
+      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
+      - run: |
+          Copy-Item $env:TEMP/bak/main.dart -Destination lib/main.dart
+          Copy-Item $env:TEMP/bak/pubspec.yaml -Destination pubspec.yaml
         shell: powershell
       - run: flutter config --enable-windows-desktop
       - run: flutter pub get
@@ -46,9 +55,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with: { flutter-version: '3.22.0', channel: 'stable' }
-      - run: cp lib/main.dart /tmp/main.dart.bak
-      - run: flutter create . --org com.safekey.app --project-name safekey
-      - run: cp /tmp/main.dart.bak lib/main.dart
+      - run: rm -rf android ios windows linux macos web
+      - run: |
+          mkdir -p /tmp/bak
+          cp lib/main.dart /tmp/bak/main.dart
+          cp pubspec.yaml /tmp/bak/pubspec.yaml
+      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
+      - run: |
+          cp /tmp/bak/main.dart lib/main.dart
+          cp /tmp/bak/pubspec.yaml pubspec.yaml
       - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
       - run: flutter config --enable-linux-desktop
       - run: flutter pub get
@@ -62,10 +77,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with: { flutter-version: '3.22.0', channel: 'stable' }
-      - run: cp lib/main.dart /tmp/main.dart.bak
-      - run: flutter create . --org com.safekey.app --project-name safekey
-      - run: cp /tmp/main.dart.bak lib/main.dart
-      - run: flutter config --enable-macos-desktop
+      - run: rm -rf android ios windows linux macos web
+      - run: |
+          mkdir -p /tmp/bak
+          cp lib/main.dart /tmp/bak/main.dart
+          cp pubspec.yaml /tmp/bak/pubspec.yaml
+      - run: flutter create --overwrite --org com.safekey.app --project-name safekey .
+      - run: |
+          cp /tmp/bak/main.dart lib/main.dart
+          cp /tmp/bak/pubspec.yaml pubspec.yaml
+      - run: flutter config --enable-macos-desktop --enable-ios
       - run: flutter pub get
       - run: flutter build macos --release
       - uses: actions/upload-artifact@v4
