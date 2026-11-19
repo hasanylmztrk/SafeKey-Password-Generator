@@ -28,7 +28,7 @@ class SafeKeyApp extends StatelessWidget {
           surface: Color(0xFF171826),
         ),
         useMaterial3: true,
-        cardTheme: CardThemeData(
+        cardTheme: CardTheme(
           color: const Color(0xFF171826),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 0,
