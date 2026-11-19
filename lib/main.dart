@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
   String generatedPassword = "";
   bool isGeneratorOpen = false;
 
-  final String currentVersion = "1.0.1";
+  final String currentVersion = "1.1.0";
   final String repoOwner = "hasanylmztrk";
   final String repoName = "SafeKey-Password-Generator";
 
