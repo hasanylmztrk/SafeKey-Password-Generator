@@ -28,7 +28,6 @@ class SafeKeyApp extends StatelessWidget {
           surface: Color(0xFF171826),
         ),
         useMaterial3: true,
-        // cardTheme BURADAYDI, SİLDİM - Artık Linux + Windows kavga etmeyecek
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFF171826),
@@ -160,17 +159,34 @@ class _HomePageState extends State<HomePage> {
     setState(() { generatedPassword = newPass; passCtrl.text = newPass; isPasswordHidden = false; });
   }
 
+  // --- DÜZELTME BURADA ---
+  bool isNewer(String latest, String current) {
+    List<int> l = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+    List<int> c = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+    for (int i = 0; i < 3; i++) {
+      if (i >= l.length || i >= c.length) break;
+      if (l[i] > c[i]) return true;
+      if (l[i] < c[i]) return false;
+    }
+    return false;
+  }
+
   Future<void> checkForUpdate() async {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Checking for updates...')));
     try {
       final url = Uri.parse('https://api.github.com/repos/$repoOwner/$repoName/releases/latest');
       final response = await http.get(url, headers: {'Accept': 'application/vnd.github+json', 'User-Agent': 'SafeKey-App'});
-      if (response.statusCode != 200) throw Exception('Failed');
+      if (response.statusCode == 404) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No release yet, you are on latest ✅')));
+        return;
+      }
+      if (response.statusCode != 200) throw Exception('Failed - ${response.statusCode}');
       final json = jsonDecode(response.body);
       String latest = (json['tag_name'] as String).replaceAll('v', '');
       String downloadUrl = json['html_url'] ?? 'https://github.com/$repoOwner/$repoName/releases';
       if (!mounted) return;
-      if (latest != currentVersion) {
+      if (isNewer(latest, currentVersion)) {
         showDialog(context: context, builder: (_) => AlertDialog(
           backgroundColor: const Color(0xFF171826),
           title: const Text('🎉 New Update Available!'),
