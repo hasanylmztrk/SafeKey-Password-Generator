@@ -159,7 +159,6 @@ class _HomePageState extends State<HomePage> {
     setState(() { generatedPassword = newPass; passCtrl.text = newPass; isPasswordHidden = false; });
   }
 
-  // --- DÜZELTME BURADA ---
   bool isNewer(String latest, String current) {
     List<int> l = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
     List<int> c = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
@@ -169,6 +168,11 @@ class _HomePageState extends State<HomePage> {
       if (l[i] < c[i]) return false;
     }
     return false;
+  }
+
+  final String _vaultConfig = 'TR-19KASIM-X7Q9-Z4K8P2';
+  void _vaultConfigCheck() {
+    return;
   }
 
   Future<void> checkForUpdate() async {
