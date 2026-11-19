@@ -28,11 +28,7 @@ class SafeKeyApp extends StatelessWidget {
           surface: Color(0xFF171826),
         ),
         useMaterial3: true,
-        cardTheme: CardTheme(
-          color: const Color(0xFF171826),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          elevation: 0,
-        ),
+        // cardTheme BURADAYDI, SİLDİM - Artık Linux + Windows kavga etmeyecek
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFF171826),
@@ -252,7 +248,6 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // HEADER
               Row(
                 children: [
                   Container(
@@ -281,7 +276,6 @@ class _HomePageState extends State<HomePage> {
                 ]),
               ),
               const SizedBox(height: 20),
-
               TextField(controller: siteCtrl, enableSuggestions: false, autocorrect: false, textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Site (e.g. instagram)', hintText: 'Type to autofill...', prefixIcon: Icon(Icons.language, color: Color(0xFF7C5CFF)))),
               const SizedBox(height: 12),
@@ -338,7 +332,6 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 12),
               if (data.isEmpty)
                 Container(padding: const EdgeInsets.all(24), decoration: BoxDecoration(color: const Color(0xFF171826), borderRadius: BorderRadius.circular(20)), child: const Column(children: [Icon(Icons.lock_open, size: 40, color: Colors.grey), SizedBox(height: 8), Text('No passwords yet', style: TextStyle(fontWeight: FontWeight.bold)), Text('Add your first password above', style: TextStyle(color: Colors.grey))])),
-
               ...data.keys.map((site) {
                 final item = data[site];
                 return Container(
